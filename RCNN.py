@@ -19,9 +19,9 @@ batch_size = 4
 
 # check if we already have a best loss
 if os.path.isfile("best_loss.npy"):
-	best_loss = np.load("best_loss.npy")
+    best_loss = np.load("best_loss.npy")
 else:
-	best_loss = 1000000
+    best_loss = 1000000
 
 
 # When you load the model back again via state_dict method,\
@@ -126,10 +126,10 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
 
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(\
-	optimizer, 'min' ,\
-	factor=0.5 ,\
-	patience=1000 ,\
-	verbose=True)
+    optimizer, 'min' ,\
+    factor=0.5 ,\
+    patience=1000 ,\
+    verbose=True)
 
 #make a checkpoints directory
 os.system("mkdir -p checkpoints")
@@ -159,11 +159,11 @@ for epoch in range(epochs):  # loop over the dataset multiple times
             print('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss / 2000))
             if loss < best_loss:
-            	np.save("best_loss.npy",loss)
+                np.save("best_loss.npy",loss)
                 ckpt_path = "checkpoints/{}-{}.pyt".format(epoch,i)
 
                 print("Better loss found, \
-                	saving model at {}".format(ckpt_path))
+                    saving model at {}".format(ckpt_path))
 
                 best_loss = loss
                 torch.save(net.state_dict(),ckpt_path)
