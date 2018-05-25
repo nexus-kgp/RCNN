@@ -4,14 +4,28 @@ import torchvision.transforms as transforms
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import os
 
 transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
+learning_rate = 0.001
+K = 96
+epochs = 10
+droput_p = 0.5
+batch_size = 4
+best_loss = 1000000
+
+
+# When you load the model back again via state_dict method,\
+# \remember to do net.eval(), otherwise the results will differ
+
+use_gpu = torch.cuda.is_available()
+
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                         download=True, transform=transform)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=4,
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                           shuffle=True, num_workers=2)
 
 testset = torchvision.datasets.CIFAR10(root='./data', train=False,
@@ -21,15 +35,6 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=4,
 
 dataiter = iter(trainloader)
 images, labels = dataiter.next()
-
-
-learning_rate = 0.001
-K = 96
-epochs = 10
-droput_p = 0.5
-
-use_gpu = torch.cuda.is_available()
-
 
 class RCNN(nn.Module):
 
@@ -114,6 +119,10 @@ if use_gpu:
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
 
+#make a checkpoints directory
+os.system("mkdir -p checkpoints")
+
+
 # Train the network
 for epoch in range(epochs):  # loop over the dataset multiple times
 
@@ -135,9 +144,15 @@ for epoch in range(epochs):  # loop over the dataset multiple times
 
         # print statistics
         running_loss += loss.item()
-        if i % 2000 == 1999:    # print every 2000 mini-batches
+        if i % 1000 == 999:    # print every 1000 mini-batches
             print('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss / 2000))
+            if loss < best_loss:
+                ckpt_path = "checkpoints/{}-{}.pyt".format(epoch,i)
+                print("Better loss found, saving model at {}".format(ckpt_path))
+                best_loss = loss
+                torch.save(net.state_dict(),ckpt_path)
+
             running_loss = 0.0
 
 print('Finished Training')
