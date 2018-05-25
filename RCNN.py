@@ -3,6 +3,7 @@ import torchvision
 import torchvision.transforms as transforms
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim as optim
 
 transform = transforms.Compose(
     [transforms.ToTensor(),
@@ -21,36 +22,44 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=4,
 dataiter = iter(trainloader)
 images, labels = dataiter.next()
 
+
+learning_rate = 0.001
+K = 96
+epochs = 10
+droput_p = 0.5
+alpha = 0.001
+
+
 class RCNN(nn.Module):
 
     def __init__(self):
         super(RCNN, self).__init__()
 
         self.max_pool = nn.MaxPool2d(3,2)
-        self.lrn = nn.LocalResponseNorm(13)
-        self.droput = nn.Dropout()
+        self.lrn = nn.LocalResponseNorm(13,alpha)
+        self.droput = nn.Dropout(droput_p)
 
-        self.conv1 = nn.Conv2d(3, 96, 5,1)
+        self.conv1 = nn.Conv2d(3, K, 5,1)
 
-        self.rcl_1_feed_fwd = nn.Conv2d(96,96,3,1,1)
-        self.rcl_1_rec = nn.Conv2d(96,96,3,1,1)
+        self.rcl_1_feed_fwd = nn.Conv2d(K,K,3,1,1)
+        self.rcl_1_rec = nn.Conv2d(K,K,3,1,1)
 
-        self.conv2 = nn.Conv2d(96,96,3,1,1)
+        self.conv2 = nn.Conv2d(K,K,3,1,1)
         
-        self.rcl_2_feed_fwd = nn.Conv2d(96,96,3,1,1)
-        self.rcl_2_rec = nn.Conv2d(96,96,3,1,1)
+        self.rcl_2_feed_fwd = nn.Conv2d(K,K,3,1,1)
+        self.rcl_2_rec = nn.Conv2d(K,K,3,1,1)
 
-        self.conv2 = nn.Conv2d(96,96,3,1,1)
+        self.conv2 = nn.Conv2d(K,K,3,1,1)
         
-        self.rcl_3_feed_fwd = nn.Conv2d(96,96,3,1,1)
-        self.rcl_3_rec = nn.Conv2d(96,96,3,1,1)
+        self.rcl_3_feed_fwd = nn.Conv2d(K,K,3,1,1)
+        self.rcl_3_rec = nn.Conv2d(K,K,3,1,1)
 
-        self.conv3 = nn.Conv2d(96,96,3,1,1)
+        self.conv3 = nn.Conv2d(K,K,3,1,1)
         
-        self.rcl_4_feed_fwd = nn.Conv2d(96,96,3,1,1)
-        self.rcl_4_rec = nn.Conv2d(96,96,3,1,1)
+        self.rcl_4_feed_fwd = nn.Conv2d(K,K,3,1,1)
+        self.rcl_4_rec = nn.Conv2d(K,K,3,1,1)
 
-        self.linear = nn.Linear(96*2*2,10)
+        self.linear = nn.Linear(K*2*2,10)
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
@@ -90,7 +99,7 @@ class RCNN(nn.Module):
         out = self.droput(out)
         out = self.max_pool(out)
 
-        out = out.view(-1,96*2*2)
+        out = out.view(-1,K*2*2)
         out = self.linear(out)
         out = self.softmax(out)
 
@@ -98,14 +107,11 @@ class RCNN(nn.Module):
 
 net = RCNN()
 
-
-import torch.optim as optim
-
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
 
 # Train the network
-for epoch in range(2):  # loop over the dataset multiple times
+for epoch in range(epochs):  # loop over the dataset multiple times
 
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
