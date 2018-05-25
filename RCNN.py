@@ -124,6 +124,7 @@ if use_gpu:
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' ,factor=0.5 ,patience=1000 ,verbose=True)
 
 #make a checkpoints directory
 os.system("mkdir -p checkpoints")
@@ -144,9 +145,8 @@ for epoch in range(epochs):  # loop over the dataset multiple times
         optimizer.zero_grad()
         outputs = net(inputs)
         loss = criterion(outputs, labels)
-        print(loss)
         loss.backward()
-        optimizer.step()
+        scheduler.step(loss)
 
         # print statistics
         running_loss += loss.item()
