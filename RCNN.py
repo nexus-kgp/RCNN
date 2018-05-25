@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import os
+import numpy as np
 
 transform = transforms.Compose(
     [transforms.ToTensor(),
@@ -15,7 +16,12 @@ K = 96
 epochs = 10
 droput_p = 0.5
 batch_size = 4
-best_loss = 1000000
+
+# check if we already have a best loss
+if os.path.isfile("best_loss.npy"):
+	best_loss = np.load("best_loss.npy")
+else:
+	best_loss = 1000000
 
 
 # When you load the model back again via state_dict method,\
@@ -148,6 +154,7 @@ for epoch in range(epochs):  # loop over the dataset multiple times
             print('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss / 2000))
             if loss < best_loss:
+            	np.save("best_loss.npy",loss)
                 ckpt_path = "checkpoints/{}-{}.pyt".format(epoch,i)
                 print("Better loss found, saving model at {}".format(ckpt_path))
                 best_loss = loss
