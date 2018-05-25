@@ -1,7 +1,6 @@
 import torch
 import torchvision
 import torchvision.transforms as transforms
-import pudb
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -54,8 +53,6 @@ class RCNN(nn.Module):
         self.linear = nn.Linear(96*2*2,10)
         self.softmax = nn.Softmax(dim=1)
 
-        ### ???????????????????????
-
     def forward(self, x):
 
         out = self.conv1(x)
@@ -63,36 +60,29 @@ class RCNN(nn.Module):
 
         # First RCL
         out_r = self.rcl_1_feed_fwd(out)
-
         for i in range(3):
             out_r = self.rcl_1_rec(out_r) + self.rcl_1_feed_fwd(out)
-
         out = out_r
         out = self.droput(out)
 
         # Second RCL
         out_r = self.rcl_2_feed_fwd(out)
-
         for i in range(3):
             out_r = self.rcl_2_rec(out_r) + self.rcl_2_feed_fwd(out)
 
         out = out_r
         out = self.droput(out)
-
         out = self.max_pool(out)
 
         # Third RCL 
         out_r = self.rcl_3_feed_fwd(out)
-
         for i in range(3):
             out_r = self.rcl_3_rec(out_r) + self.rcl_3_feed_fwd(out)
-
         out = out_r
         out = self.droput(out)
 
         # Fourth RCL
         out_r = self.rcl_4_feed_fwd(out)
-
         for i in range(3):
             out_r = self.rcl_4_rec(out_r) + self.rcl_4_feed_fwd(out)
 
@@ -114,23 +104,16 @@ import torch.optim as optim
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
-########################################################################
 # Train the network
-
 for epoch in range(2):  # loop over the dataset multiple times
 
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
-        # pu.db
-        # get the inputs
         inputs, labels = data
 
         # zero the parameter gradients
         optimizer.zero_grad()
-
-        # forward + backward + optimize
         outputs = net(inputs)
-        # print("outputs")
         loss = criterion(outputs, labels)
         print(loss)
         loss.backward()
