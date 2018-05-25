@@ -15,7 +15,7 @@ learning_rate = 0.001
 K = 96
 epochs = 10
 droput_p = 0.5
-batch_size = 4
+batch_size = 32
 
 # check if we already have a best loss
 if os.path.isfile("best_loss.npy"):
@@ -159,7 +159,7 @@ for epoch in range(epochs):  # loop over the dataset multiple times
             print('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss / 2000))
             if loss < best_loss:
-                np.save("best_loss.npy",loss)
+                np.save("best_loss.npy",loss.detach())
                 ckpt_path = "checkpoints/{}-{}.pyt".format(epoch,i)
 
                 print("Better loss found, \
