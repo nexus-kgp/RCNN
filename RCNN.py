@@ -124,7 +124,12 @@ if use_gpu:
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' ,factor=0.5 ,patience=1000 ,verbose=True)
+
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(\
+	optimizer, 'min' ,\
+	factor=0.5 ,\
+	patience=1000 ,\
+	verbose=True)
 
 #make a checkpoints directory
 os.system("mkdir -p checkpoints")
@@ -156,7 +161,10 @@ for epoch in range(epochs):  # loop over the dataset multiple times
             if loss < best_loss:
             	np.save("best_loss.npy",loss)
                 ckpt_path = "checkpoints/{}-{}.pyt".format(epoch,i)
-                print("Better loss found, saving model at {}".format(ckpt_path))
+
+                print("Better loss found, \
+                	saving model at {}".format(ckpt_path))
+
                 best_loss = loss
                 torch.save(net.state_dict(),ckpt_path)
 
