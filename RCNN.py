@@ -27,7 +27,8 @@ learning_rate = 0.001
 K = 96
 epochs = 10
 droput_p = 0.5
-alpha = 0.001
+
+use_gpu = torch.cuda.is_available()
 
 
 class RCNN(nn.Module):
@@ -36,7 +37,7 @@ class RCNN(nn.Module):
         super(RCNN, self).__init__()
 
         self.max_pool = nn.MaxPool2d(3,2)
-        self.lrn = nn.LocalResponseNorm(13,alpha)
+        self.lrn = nn.LocalResponseNorm(13)
         self.droput = nn.Dropout(droput_p)
 
         self.conv1 = nn.Conv2d(3, K, 5,1)
@@ -107,6 +108,9 @@ class RCNN(nn.Module):
 
 net = RCNN()
 
+if use_gpu:
+    net.cuda()
+
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
 
@@ -116,6 +120,10 @@ for epoch in range(epochs):  # loop over the dataset multiple times
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
         inputs, labels = data
+
+        if use_gpu:
+            inputs = inputs.cuda()
+            labels = labels.cuda()
 
         # zero the parameter gradients
         optimizer.zero_grad()
