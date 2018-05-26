@@ -1,42 +1,29 @@
 import torch
 import torchvision
+# import pudb;pu.db
 import torchvision.transforms as transforms
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
-import os
-import numpy as np
 import pudb
+
 
 transform = transforms.Compose(
     [transforms.ToTensor(),
-     transforms.Normalize((0.47, 0.47, 0.47), (0.5, 0.5, 0.5))])
+     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+
 
 learning_rate = 0.001
 K = 96
-epochs = 10000
+epochs = 10
 droput_p = 0.5
-batch_size = 2048
-
-best_loss = 100000
-
-# When you load the model back again via state_dict method,\
-# \remember to do net.eval(), otherwise the results will differ
-
-use_gpu = torch.cuda.is_available()
-
-trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
-                                        download=True, transform=transform)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
-                                          shuffle=True, num_workers=2)
+batch_size = 4
 
 testset = torchvision.datasets.CIFAR10(root='./data', train=False,
-                                       download=True, transform=transform)
-testloader = torch.utils.data.DataLoader(testset, batch_size=4,
-                                         shuffle=False, num_workers=2)
+                                       download=True, transform = transform)
 
-dataiter = iter(trainloader)
-images, labels = dataiter.next()
+testloader = torch.utils.data.DataLoader(testset, batch_size=4096,
+                                         shuffle=False, num_workers=2)
 
 class RCNN(nn.Module):
 
@@ -120,55 +107,34 @@ class RCNN(nn.Module):
 
 
 
+use_gpu = torch.cuda.is_available()
+
 net = RCNN()
 
 if use_gpu:
-    net.cuda()
+	net.cuda()
 
+correct = 0
+total = 0
 
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(net.parameters(), lr=learning_rate)
+net.load_state_dict(torch.load('./checkpoints/19-24-2.2642.pyt'))
+net.eval()
 
-
-#make a checkpoints directory
-os.system("mkdir -p checkpoints")
-
-
-# Train the network
-for epoch in range(epochs):  # loop over the dataset multiple times
-
-    running_loss = 0.0
-    for i, data in enumerate(trainloader, 0):
-        inputs, labels = data
-
+with torch.no_grad():
+    total_iterations = len(list(testloader))
+    k = 0
+    for data in testloader:
+        k = k+1
+        images, labels = data
+        # pu.db
         if use_gpu:
-            inputs = inputs.cuda()
-            labels = labels.cuda()
+        	images = images.cuda()
+        	labels = labels.cuda()
+        outputs = net(images)
+        _, predicted = torch.max(outputs.data, 1)
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
+        print("{} of {} iterations done".format(k,total_iterations))
 
-        # zero the parameter gradients
-        optimizer.zero_grad()
-        outputs = net(inputs)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-        # scheduler.step(loss)
-
-        # print statistics
-        running_loss += loss.item()
-        if i % 5 == 4:    # print every 5 mini-batches
-            
-            print('[%d, %5d] loss: %.4f' %
-                  (epoch + 1, i + 1, loss))
-
-            if loss.detach().cpu().numpy() < best_loss:
-                np.save("best_loss.npy",loss.detach())
-                ckpt_path = "checkpoints/{0}-{1}-{2:0.4f}.pyt".\
-                format(epoch,i,(loss.detach().cpu().numpy()))
-
-                print("Better loss (= {0:0.4f}) found, \
-                    saving model at {1}".format(loss,ckpt_path))
-
-                best_loss = loss.detach().cpu().numpy()
-                torch.save(net.state_dict(),ckpt_path)
-
-print('Finished Training')
+print('Accuracy of the network on the 10000 test images: %d %%' % (
+    100 * correct / total))
