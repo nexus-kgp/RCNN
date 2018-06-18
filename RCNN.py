@@ -77,17 +77,17 @@ class RCNN(nn.Module):
         out = self.max_pool(out)
 
         # First RCL
-        out_r = self.rcl_1_feed_fwd(out)
+        out_f = out_r = self.rcl_1_feed_fwd(out)
         for i in range(3):
-            out_r = self.rcl_1_rec(out_r) + self.rcl_1_feed_fwd(out)
+            out_r = self.rcl_1_rec(out_r) + out_f
         out = out_r
         out = self.lrn(self.relu(out))
         out = self.droput(out)
 
         # Second RCL
-        out_r = self.rcl_2_feed_fwd(out)
+        out_f = out_r = self.rcl_2_feed_fwd(out)
         for i in range(3):
-            out_r = self.rcl_2_rec(out_r) + self.rcl_2_feed_fwd(out)
+            out_r = self.rcl_2_rec(out_r) + out_f
 
         out = out_r
         out = self.lrn(self.relu(out))
@@ -95,17 +95,17 @@ class RCNN(nn.Module):
         out = self.max_pool(out)
 
         # Third RCL 
-        out_r = self.rcl_3_feed_fwd(out)
+        out_f = out_r = self.rcl_3_feed_fwd(out)
         for i in range(3):
-            out_r = self.rcl_3_rec(out_r) + self.rcl_3_feed_fwd(out)
+            out_r = self.rcl_3_rec(out_r) + out_f
         out = out_r
         out = self.lrn(self.relu(out))
         out = self.droput(out)
 
         # Fourth RCL
-        out_r = self.rcl_4_feed_fwd(out)
+        out_f = out_r = self.rcl_4_feed_fwd(out)
         for i in range(3):
-            out_r = self.rcl_4_rec(out_r) + self.rcl_4_feed_fwd(out)
+            out_r = self.rcl_4_rec(out_r) + out_f
 
         out = out_r
         out = self.lrn(self.relu(out))
